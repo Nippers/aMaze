@@ -1,7 +1,10 @@
-﻿require(["grid"], function (TileGrid) {
+﻿require(["grids", "cookies"], function (Grids, Cookies) {
+
     var app = this,
         CIRCLE = Math.PI * 2,
-        MOBILE = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent)
+        MOBILE = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent),
+        currentPostition = document.getElementById("position");
+        
 
     function Controls() {
         this.codes = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward' };
@@ -59,11 +62,27 @@
         if (map.get(this.x + dx, this.y) <= 0) this.x += dx;
         if (map.get(this.x, this.y + dy) <= 0) this.y += dy;
 
-        if (this.y > 32 || this.y < 0 || this.x > 32 || this.x < 0) {
-
+        if (this.y > map.size || this.y < 0 || this.x > map.size || this.x < 0) {
+            if (!app.mazeCompleted) {
+                app.mazeCompleted = true;
+            }
+            else {
+                app.loop.stop();
+                var nextGrid = app.currentGrid + 1;
+                if (Grids.length == nextGrid) {
+                    alert("Congratulations! You have escaped from all mazes. You are aMazing ;)");
+                }
+                else {
+                    if (confirm("Hooray! You have escaped. Click OK to move on to the next level or CANCEL to play this level over again.")) {
+                        app.currentGrid++
+                    }
+                    app.init(Grids[app.currentGrid]);
+                }
+            }
         }
-
-        this.paces += distance;
+        else {
+            this.paces += distance;
+        }
     };
 
     Player.prototype.update = function (controls, map, seconds) {
@@ -71,14 +90,56 @@
         if (controls.right) this.rotate(Math.PI * seconds);
         if (controls.forward) this.walk(3 * seconds, map);
         if (controls.backward) this.walk(-3 * seconds, map);
+
+        currentPostition.value = "x: " + this.x + "; y: " + this.y + "; direction: " + this.getCompassDirection(this.direction);
     };
 
-    function Map(size) {
+    Player.prototype.getCompassDirection = function (dir) {
+
+        var dirString = "E",
+            directionThreshold = 0.39269908125,
+            seValue = 0.7853981625,
+            sValue = 1.570796325,
+            swValue = 2.3561944875,
+            wValue = 3.14159265,
+            nwValue = 3.9269908125,
+            nValue = 4.712388975,
+            neValue = 5.4977871375,
+            eValue =6.2831853;
+
+        if((dir >= (seValue - directionThreshold)) && (dir <= (seValue + directionThreshold)))
+        {
+            dirString = "SE";
+        }
+        else if ((dir >= (sValue - directionThreshold)) && (dir <= (sValue + directionThreshold))) {
+            dirString = "S";
+        }
+        else if ((dir >= (swValue - directionThreshold)) && (dir <= (swValue + directionThreshold))) {
+            dirString = "SW";
+        }
+        else if ((dir >= (wValue - directionThreshold)) && (dir <= (wValue + directionThreshold))) {
+            dirString = "W";
+        }
+        else if ((dir >= (nwValue - directionThreshold)) && (dir <= (nwValue + directionThreshold))) {
+            dirString = "NW";
+        }
+        else if ((dir >= (nValue - directionThreshold)) && (dir <= (nValue + directionThreshold))) {
+            dirString = "N";
+        }
+        else if ((dir >= (neValue - directionThreshold)) && (dir <= (neValue + directionThreshold))) {
+            dirString = "NE";
+        }
+
+        return dirString;
+
+    };
+
+    function Map(size, grid) {
         this.size = size;
-        this.wallGrid = TileGrid;
+        this.wallGrid = grid;
         this.skybox = new Bitmap('assets/bg.png', 2000, 750);
         this.wallTexture = new Bitmap('assets/wall_texture.jpg', 700, 516);
-        this.light = 0.2;
+        this.light = 0.6;
     }
 
     Map.prototype.get = function (x, y) {
@@ -86,12 +147,6 @@
         y = Math.floor(y);
         if (x < 0 || x > this.size - 1 || y < 0 || y > this.size - 1) return -1;
         return this.wallGrid[y * this.size + x];
-    };
-
-    Map.prototype.randomize = function () {
-        for (var i = 0; i < this.size * this.size; i++) {
-            this.wallGrid[i] = Math.random() < 0.3 ? 1 : 0;
-        }
     };
 
     Map.prototype.cast = function (point, angle, range) {
@@ -199,9 +254,13 @@
                 var wall = this.project(step.height, angle, step.distance);
                 ctx.globalAlpha = 1;
                 ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, wall.top, width, wall.height);
+
+                ctx.fillStyle = '#333';
+                ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
+                ctx.fillRect(left, wall.top, width, wall.height);
             }
 
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = '#fff';
             ctx.globalAlpha = 0.15;
         }
     };
@@ -227,26 +286,37 @@
         requestAnimationFrame(this.frame);
     };
 
-    GameLoop.prototype.frame = function (time) {
-        var seconds = (time - this.lastTime) / 1000;
-        this.lastTime = time;
-        if (seconds < 0.2) this.callback(seconds);
+    GameLoop.prototype.stop = function () {
+        this.callback = null;
         requestAnimationFrame(this.frame);
     };
 
-    var display = document.getElementById('display');
-    var player = new Player(16, 16, Math.PI * 0.3);
-    var map = new Map(32);
-    var controls = new Controls();
-    var camera = new Camera(display, MOBILE ? 320 : 640, .5);
-    var loop = new GameLoop();
+    GameLoop.prototype.frame = function (time) {
+        var seconds = (time - this.lastTime) / 1000;
+        this.lastTime = time;
+        if (this.callback !== null) {
+            if (seconds < 0.2) this.callback(seconds);
+            requestAnimationFrame(this.frame);
+        }
+    };
 
-    loop.start(function frame(seconds) {
-        map.update(seconds);
-        player.update(controls.states, map, seconds);
-        camera.render(player, map);
-    });
+    app.init = function (grid) {
+        Cookies.setItem("level", app.currentGrid, Infinity);
+        app.mazeCompleted = false;
+        var display = document.getElementById('display');
+        var player = new Player(grid.startingPoint.x, grid.startingPoint.y, Math.PI * grid.startingDirection);
+        var map = new Map(grid.size, grid.walls);
+        var controls = new Controls();
+        var camera = new Camera(display, MOBILE ? 180 : 640, .5);
+        app.loop = new GameLoop();
 
-    window.application = app;
+        app.loop.start(function frame(seconds) {
+            player.update(controls.states, map, seconds);
+            camera.render(player, map);
+        });
+    };
+
+    app.currentGrid = Cookies.hasItem("level") ? Number(Cookies.getItem("level")) : 0;
+    app.init(Grids[app.currentGrid]);
 
 });
