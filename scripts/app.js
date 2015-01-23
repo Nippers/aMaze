@@ -145,7 +145,8 @@
         this.size = size;
         this.wallGrid = grid;
         this.skybox = new Bitmap("assets/bg.png", 2000, 750);
-        this.wallTexture = new Bitmap("assets/wall_texture.jpg", 700, 516);
+        this.wallTexture = (grid.wallTexture ? new Bitmap(grid.wallTexture.path, grid.wallTexture.width, grid.wallTexture.height) :
+                                               new Bitmap("assets/wall_texture.jpg", 700, 516));
         this.light = 0.6;
     }
 
