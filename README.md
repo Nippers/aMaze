@@ -1,0 +1,2 @@
+# aMaze
+Simple maze application
