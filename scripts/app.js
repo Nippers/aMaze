@@ -143,7 +143,7 @@
 
     function Map(size, grid) {
         this.size = size;
-        this.wallGrid = grid;
+        this.wallGrid = grid.walls;
         this.skybox = new Bitmap("assets/bg.png", 2000, 750);
         this.wallTexture = (grid.wallTexture ? new Bitmap(grid.wallTexture.path, grid.wallTexture.width, grid.wallTexture.height) :
                                                new Bitmap("assets/wall_texture.jpg", 700, 516));
@@ -317,7 +317,7 @@
                                 (Cookies.hasItem("y") ? Number(Cookies.getItem("y")) : grid.startingPoint.y),
                                 (Cookies.hasItem("dir") ? Number(Cookies.getItem("dir")) : grid.startingDirection));
 
-        aMaze.map = new Map(grid.size, grid.walls);
+        aMaze.map = new Map(grid.size, grid);
         aMaze.controls = new Controls();
         aMaze.camera = new Camera(aMaze.display, MOBILE ? 180 : 640, .5);
         aMaze.loop = new GameLoop();
