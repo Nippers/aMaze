@@ -4,7 +4,8 @@
         CIRCLE = Math.PI * 2,
         MOBILE = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent),
         currentPostition = document.getElementById("position"),
-        currentLevel = document.getElementById("currentLevel");
+        currentLevel = document.getElementById("currentLevel"),
+        instructions = document.getElementById("instructions");
 
 
     function Controls() {
@@ -75,7 +76,7 @@
                     alert("Congratulations! You have escaped from all mazes. You are aMazing ;)");
                 }
                 else {
-                    if (confirm("Hooray! You have escaped. Click OK to move on to the next level or CANCEL to play this level over again.")) {
+                    if (confirm("You have escaped! Click OK to move on to the next level or CANCEL to play this level over again.")) {
                         aMaze.currentGrid++
                     }
                     aMaze.onRestartLevel();
@@ -94,9 +95,9 @@
         if (controls.forward) this.walk(3 * seconds, map);
         if (controls.backward) this.walk(-3 * seconds, map);
 
-        currentPostition.innerHTML = "X: " + Math.round(this.x) + "; Y: " + Math.round(this.y) + "; Direction: " + this.getCompassDirection(this.direction);
+        currentPostition.innerHTML = "X: " + Math.round(this.x) + " | Y: " + Math.round(this.y) + " | Direction: " + this.getCompassDirection(this.direction);
 
-        if (aMaze.updatesMade % 25 == 0) { // Set cookie for location once every 25 updates to prevent lag
+        if (aMaze.updatesMade % 25 == 0) { // Set cookie for location once every 25 updates to prevent lag            
             aMaze.setLocation(this.x, this.y, this.direction);
         }
     };
@@ -324,6 +325,11 @@
             aMaze.player.update(aMaze.controls.states, aMaze.map, seconds);
             aMaze.camera.render(aMaze.player, aMaze.map);
         });
+
+        instructions.style.display = "block";
+        setTimeout(function () {
+            instructions.style.display = "none";
+        }, 10000);
     };
 
     aMaze.onRestartLevel = function () {
