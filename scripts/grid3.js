@@ -2,7 +2,7 @@
     var grid = {
         id: 3,
         startingPoint: { x: 30, y: 19},
-        startingDirection: 1,
+        startingDirection: 3.14159265, // West
         size: 32,
         walls: [
 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

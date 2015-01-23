@@ -1,19 +1,21 @@
-﻿require(["grids", "cookies"], function (Grids, Cookies) {
+﻿require(["grids.min", "cookies.min"], function (Grids, Cookies) {
 
-    var app = this,
+    var aMaze = this,
         CIRCLE = Math.PI * 2,
         MOBILE = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent),
-        currentPostition = document.getElementById("position");
-        
+        currentPostition = document.getElementById("position"),
+        currentLevel = document.getElementById("currentLevel");
+
 
     function Controls() {
-        this.codes = { 37: 'left', 39: 'right', 38: 'forward', 40: 'backward' };
-        this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false };
-        document.addEventListener('keydown', this.onKey.bind(this, true), false);
-        document.addEventListener('keyup', this.onKey.bind(this, false), false);
-        document.addEventListener('touchstart', this.onTouch.bind(this), false);
-        document.addEventListener('touchmove', this.onTouch.bind(this), false);
-        document.addEventListener('touchend', this.onTouchEnd.bind(this), false);
+        this.codes = { 37: "left", 39: "right", 38: "forward", 40: "backward" };
+        this.states = { "left": false, "right": false, "forward": false, "backward": false };
+        document.addEventListener("keydown", this.onKey.bind(this, true), false);
+        document.addEventListener("keyup", this.onKey.bind(this, false), false);
+        document.addEventListener("touchstart", this.onTouch.bind(this), false);
+        document.addEventListener("touchmove", this.onTouch.bind(this), false);
+        document.addEventListener("touchend", this.onTouchEnd.bind(this), false);
+
     }
 
     Controls.prototype.onTouch = function (e) {
@@ -25,14 +27,14 @@
     };
 
     Controls.prototype.onTouchEnd = function (e) {
-        this.states = { 'left': false, 'right': false, 'forward': false, 'backward': false };
+        this.states = { "left": false, "right": false, "forward": false, "backward": false };
         e.preventDefault();
         e.stopPropagation();
     };
 
     Controls.prototype.onKey = function (val, e) {
         var state = this.codes[e.keyCode];
-        if (typeof state === 'undefined') return;
+        if (typeof state === "undefined") return;
         this.states[state] = val;
         e.preventDefault && e.preventDefault();
         e.stopPropagation && e.stopPropagation();
@@ -63,20 +65,20 @@
         if (map.get(this.x, this.y + dy) <= 0) this.y += dy;
 
         if (this.y > map.size || this.y < 0 || this.x > map.size || this.x < 0) {
-            if (!app.mazeCompleted) {
-                app.mazeCompleted = true;
+            if (!aMaze.mazeCompleted) {
+                aMaze.mazeCompleted = true;
             }
             else {
-                app.loop.stop();
-                var nextGrid = app.currentGrid + 1;
+                aMaze.loop.stop();
+                var nextGrid = aMaze.currentGrid + 1;
                 if (Grids.length == nextGrid) {
                     alert("Congratulations! You have escaped from all mazes. You are aMazing ;)");
                 }
                 else {
                     if (confirm("Hooray! You have escaped. Click OK to move on to the next level or CANCEL to play this level over again.")) {
-                        app.currentGrid++
+                        aMaze.currentGrid++
                     }
-                    app.init(Grids[app.currentGrid]);
+                    aMaze.onRestartLevel();
                 }
             }
         }
@@ -86,12 +88,17 @@
     };
 
     Player.prototype.update = function (controls, map, seconds) {
+        aMaze.updatesMade++;
         if (controls.left) this.rotate(-Math.PI * seconds);
         if (controls.right) this.rotate(Math.PI * seconds);
         if (controls.forward) this.walk(3 * seconds, map);
         if (controls.backward) this.walk(-3 * seconds, map);
 
-        currentPostition.value = "x: " + this.x + "; y: " + this.y + "; direction: " + this.getCompassDirection(this.direction);
+        currentPostition.innerHTML = "X: " + Math.round(this.x) + "; Y: " + Math.round(this.y) + "; Direction: " + this.getCompassDirection(this.direction);
+
+        if (aMaze.updatesMade % 25 == 0) { // Set cookie for location once every 25 updates to prevent lag
+            aMaze.setLocation(this.x, this.y, this.direction);
+        }
     };
 
     Player.prototype.getCompassDirection = function (dir) {
@@ -105,10 +112,9 @@
             nwValue = 3.9269908125,
             nValue = 4.712388975,
             neValue = 5.4977871375,
-            eValue =6.2831853;
+            eValue = 6.2831853;
 
-        if((dir >= (seValue - directionThreshold)) && (dir <= (seValue + directionThreshold)))
-        {
+        if ((dir >= (seValue - directionThreshold)) && (dir <= (seValue + directionThreshold))) {
             dirString = "SE";
         }
         else if ((dir >= (sValue - directionThreshold)) && (dir <= (sValue + directionThreshold))) {
@@ -137,8 +143,8 @@
     function Map(size, grid) {
         this.size = size;
         this.wallGrid = grid;
-        this.skybox = new Bitmap('assets/bg.png', 2000, 750);
-        this.wallTexture = new Bitmap('assets/wall_texture.jpg', 700, 516);
+        this.skybox = new Bitmap("assets/bg.png", 2000, 750);
+        this.wallTexture = new Bitmap("assets/wall_texture.jpg", 700, 516);
         this.light = 0.6;
     }
 
@@ -197,7 +203,7 @@
     };
 
     function Camera(canvas, resolution, focalLength) {
-        this.ctx = canvas.getContext('2d');
+        this.ctx = canvas.getContext("2d");
         this.width = canvas.width = window.innerWidth * 0.5;
         this.height = canvas.height = window.innerHeight * 0.5;
         this.resolution = resolution;
@@ -255,12 +261,12 @@
                 ctx.globalAlpha = 1;
                 ctx.drawImage(texture.image, textureX, 0, 1, texture.height, left, wall.top, width, wall.height);
 
-                ctx.fillStyle = '#333';
+                ctx.fillStyle = "#000";
                 ctx.globalAlpha = Math.max((step.distance + step.shading) / this.lightRange - map.light, 0);
                 ctx.fillRect(left, wall.top, width, wall.height);
             }
 
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = "#fff";
             ctx.globalAlpha = 0.15;
         }
     };
@@ -300,23 +306,55 @@
         }
     };
 
-    app.init = function (grid) {
-        Cookies.setItem("level", app.currentGrid, Infinity);
-        app.mazeCompleted = false;
-        var display = document.getElementById('display');
-        var player = new Player(grid.startingPoint.x, grid.startingPoint.y, Math.PI * grid.startingDirection);
-        var map = new Map(grid.size, grid.walls);
-        var controls = new Controls();
-        var camera = new Camera(display, MOBILE ? 180 : 640, .5);
-        app.loop = new GameLoop();
+    aMaze.init = function (grid) {
+        Cookies.setItem("level", aMaze.currentGrid, Infinity);
+        currentLevel.innerHTML = "Level: " + grid.id;
+        aMaze.mazeCompleted = false;
+        aMaze.display = document.getElementById("display");
+        aMaze.player = new Player((Cookies.hasItem("x") ? Number(Cookies.getItem("x")) : grid.startingPoint.x),
+                                (Cookies.hasItem("y") ? Number(Cookies.getItem("y")) : grid.startingPoint.y),
+                                (Cookies.hasItem("dir") ? Number(Cookies.getItem("dir")) : grid.startingDirection));
 
-        app.loop.start(function frame(seconds) {
-            player.update(controls.states, map, seconds);
-            camera.render(player, map);
+        aMaze.map = new Map(grid.size, grid.walls);
+        aMaze.controls = new Controls();
+        aMaze.camera = new Camera(aMaze.display, MOBILE ? 180 : 640, .5);
+        aMaze.loop = new GameLoop();
+
+        aMaze.loop.start(function frame(seconds) {
+            aMaze.player.update(aMaze.controls.states, aMaze.map, seconds);
+            aMaze.camera.render(aMaze.player, aMaze.map);
         });
     };
 
-    app.currentGrid = Cookies.hasItem("level") ? Number(Cookies.getItem("level")) : 0;
-    app.init(Grids[app.currentGrid]);
+    aMaze.onRestartLevel = function () {
+        aMaze.loop.stop();
+        aMaze.clearLocation();
+        aMaze.init(Grids[aMaze.currentGrid]);
+    };
+
+    aMaze.onRestartGame = function () {
+        Cookies.removeItem("level");
+        aMaze.currentGrid = 0;
+        aMaze.onRestartLevel();
+    };
+
+    aMaze.clearLocation = function () {
+        Cookies.removeItem("x");
+        Cookies.removeItem("y");
+        Cookies.removeItem("dir");
+    }
+
+    aMaze.setLocation = function (x, y, dir) {
+        Cookies.setItem("x", x, Infinity);
+        Cookies.setItem("y", y, Infinity);
+        Cookies.setItem("dir", dir, Infinity);
+    }
+
+    document.getElementById("restartLevel").addEventListener("click", aMaze.onRestartLevel.bind(this), false);
+    document.getElementById("restartGame").addEventListener("click", aMaze.onRestartGame.bind(this), false);
+
+    aMaze.updatesMade = 0;
+    aMaze.currentGrid = Cookies.hasItem("level") ? Number(Cookies.getItem("level")) : 0;
+    aMaze.init(Grids[aMaze.currentGrid]);
 
 });
