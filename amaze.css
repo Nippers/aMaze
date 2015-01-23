@@ -6,33 +6,29 @@
     height: 100%;
 }
 
-div.game-meta input, div.game-meta div {
+div.game-meta {
     position: fixed;
-    padding: 5px;
     top: 0;
-}
-
-div.game-meta input#restartLevel {
-    left: 0;
-    width: 10%;
-}
-
-div.game-meta input#restartGame {
-    left: 10%;
-    width: 10%;
-}
-
-div.game-meta div#currentLevel {
     right: 0;
     text-align: right;
-    display: inline-block;
 }
 
-div.game-meta div#position {
-    right: 0;
-    text-align: right;
-    top: 20px;
-}
+    div.game-meta input, div.game-meta div {
+        margin: 5px;
+    }
+
+        div.game-meta input#restartLevel, div.game-meta input#restartGame {
+        }
+
+        div.game-meta div#currentLevel {
+            right: 0;
+            text-align: right;
+        }
+
+        div.game-meta div#position {
+            right: 0;
+            text-align: right;
+        }
 
 canvas#display {
     width: 100%;
