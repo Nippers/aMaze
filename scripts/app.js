@@ -101,14 +101,14 @@
         if (controls.forward) this.walk(3 * seconds, map);
         if (controls.backward) this.walk(-3 * seconds, map);
 
-        currentPostition.innerHTML = "X: " + Math.round(this.x) + " | Y: " + Math.round(this.y) + " | Direction: " + this.getCompassDirection(this.direction);
+        currentPostition.innerHTML = "X: " + Math.round(this.x) + " | Y: " + Math.round(this.y) + " | Direction: " + this.getCardinalDirection(this.direction);
 
         if (aMaze.updatesMade % 25 == 0) { // Set cookie for location once every 25 updates to prevent lag            
             aMaze.setLocation(this.x, this.y, this.direction);
         }
     };
 
-    Player.prototype.getCompassDirection = function (dir) {
+    Player.prototype.getCardinalDirection = function (dir) {
 
         var dirString = "E",
             directionThreshold = 0.39269908125,
@@ -149,13 +149,14 @@
     //#endregion
 
     //#region Map
-    function Map(size, level) {
-        this.size = size;
+    function Map(level) {
+        this.size = level.size;
         this.walllevel = level.walls;
-        this.skybox = new Bitmap("assets/bg.png", 2000, 750);
+        this.skybox = (level.skybox ? new Bitmap(level.skybox.path, level.skybox.width, level.skybox.height) : 
+                                      new Bitmap("assets/bg.png", 2000, 750));
         this.wallTexture = (level.wallTexture ? new Bitmap(level.wallTexture.path, level.wallTexture.width, level.wallTexture.height) :
                                                new Bitmap("assets/wall_texture.jpg", 700, 516));
-        this.light = 0.6;
+        this.light = (level.light ? level.light : 0.6);
     }
 
     Map.prototype.get = function (x, y) {
@@ -331,7 +332,7 @@
                                 (Cookies.hasItem("y") ? Number(Cookies.getItem("y")) : level.startingPoint.y),
                                 (Cookies.hasItem("dir") ? Number(Cookies.getItem("dir")) : level.startingDirection));
 
-        aMaze.map = new Map(level.size, level);
+        aMaze.map = new Map(level);
         aMaze.controls = new Controls();
         aMaze.camera = new Camera(aMaze.display, MOBILE ? 180 : 640, .5);
         aMaze.loop = new GameLoop();
