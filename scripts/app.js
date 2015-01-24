@@ -1,4 +1,4 @@
-﻿require(["grids.min", "cookies.min"], function (Grids, Cookies) {
+﻿require(["levels.min", "cookies.min"], function (Levels, Cookies) {
 
     //#region app.js Scoped Global Variables
     var aMaze = this,
@@ -77,13 +77,13 @@
             }
             else {
                 aMaze.loop.stop();
-                var nextGrid = aMaze.currentGrid + 1;
-                if (Grids.length == nextGrid) {
+                var nextLevel = aMaze.currentLevel + 1;
+                if (Levels.length == nextLevel) {
                     alert("Congratulations! You have escaped from all mazes. You are aMazing ;)");
                 }
                 else {
                     if (confirm("You have escaped! Click OK to move on to the next level or CANCEL to play this level over again.")) {
-                        aMaze.currentGrid++
+                        aMaze.currentLevel++
                     }
                     aMaze.onRestartLevel();
                 }
@@ -149,11 +149,11 @@
     //#endregion
 
     //#region Map
-    function Map(size, grid) {
+    function Map(size, level) {
         this.size = size;
-        this.wallGrid = grid.walls;
+        this.walllevel = level.walls;
         this.skybox = new Bitmap("assets/bg.png", 2000, 750);
-        this.wallTexture = (grid.wallTexture ? new Bitmap(grid.wallTexture.path, grid.wallTexture.width, grid.wallTexture.height) :
+        this.wallTexture = (level.wallTexture ? new Bitmap(level.wallTexture.path, level.wallTexture.width, level.wallTexture.height) :
                                                new Bitmap("assets/wall_texture.jpg", 700, 516));
         this.light = 0.6;
     }
@@ -162,7 +162,7 @@
         x = Math.floor(x);
         y = Math.floor(y);
         if (x < 0 || x > this.size - 1 || y < 0 || y > this.size - 1) return -1;
-        return this.wallGrid[y * this.size + x];
+        return this.walllevel[y * this.size + x];
     };
 
     Map.prototype.cast = function (point, angle, range) {
@@ -322,16 +322,16 @@
     //#endregion
 
     //#region aMaze
-    aMaze.init = function (grid) {
-        Cookies.setItem("level", aMaze.currentGrid, Infinity);
-        currentLevel.innerHTML = "Level: " + grid.id;
+    aMaze.init = function (level) {
+        Cookies.setItem("level", aMaze.currentLevel, Infinity);
+        currentLevel.innerHTML = "Level: " + level.id;
         aMaze.mazeCompleted = false;
         aMaze.display = document.getElementById("display");
-        aMaze.player = new Player((Cookies.hasItem("x") ? Number(Cookies.getItem("x")) : grid.startingPoint.x),
-                                (Cookies.hasItem("y") ? Number(Cookies.getItem("y")) : grid.startingPoint.y),
-                                (Cookies.hasItem("dir") ? Number(Cookies.getItem("dir")) : grid.startingDirection));
+        aMaze.player = new Player((Cookies.hasItem("x") ? Number(Cookies.getItem("x")) : level.startingPoint.x),
+                                (Cookies.hasItem("y") ? Number(Cookies.getItem("y")) : level.startingPoint.y),
+                                (Cookies.hasItem("dir") ? Number(Cookies.getItem("dir")) : level.startingDirection));
 
-        aMaze.map = new Map(grid.size, grid);
+        aMaze.map = new Map(level.size, level);
         aMaze.controls = new Controls();
         aMaze.camera = new Camera(aMaze.display, MOBILE ? 180 : 640, .5);
         aMaze.loop = new GameLoop();
@@ -350,12 +350,12 @@
     aMaze.onRestartLevel = function () {
         aMaze.loop.stop();
         aMaze.clearLocation();
-        aMaze.init(Grids[aMaze.currentGrid]);
+        aMaze.init(Levels[aMaze.currentLevel]);
     };
 
     aMaze.onRestartGame = function () {
         Cookies.removeItem("level");
-        aMaze.currentGrid = 0;
+        aMaze.currentLevel = 0;
         aMaze.onRestartLevel();
     };
 
@@ -375,8 +375,8 @@
     document.getElementById("restartGame").addEventListener("click", aMaze.onRestartGame.bind(this), false);
 
     aMaze.updatesMade = 0;
-    aMaze.currentGrid = Cookies.hasItem("level") ? Number(Cookies.getItem("level")) : 0;
-    aMaze.init(Grids[aMaze.currentGrid]);
+    aMaze.currentLevel = Cookies.hasItem("level") ? Number(Cookies.getItem("level")) : 0;
+    aMaze.init(Levels[aMaze.currentLevel]);
     //#endregion
 
 });
