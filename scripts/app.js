@@ -1,13 +1,15 @@
 ﻿require(["grids.min", "cookies.min"], function (Grids, Cookies) {
 
+    //#region app.js Scoped Global Variables
     var aMaze = this,
         CIRCLE = Math.PI * 2,
         MOBILE = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent),
         currentPostition = document.getElementById("position"),
         currentLevel = document.getElementById("currentLevel"),
         instructions = document.getElementById("instructions");
+    //#endregion
 
-
+    //#region Controls
     function Controls() {
         this.codes = { 37: "left", 39: "right", 38: "forward", 40: "backward" };
         this.states = { "left": false, "right": false, "forward": false, "backward": false };
@@ -40,14 +42,18 @@
         e.preventDefault && e.preventDefault();
         e.stopPropagation && e.stopPropagation();
     };
+    //#endregion
 
+    //#region Bitmap
     function Bitmap(src, width, height) {
         this.image = new Image();
         this.image.src = src;
         this.width = width;
         this.height = height;
     }
+    //#endregion
 
+    //#region Player
     function Player(x, y, direction) {
         this.x = x;
         this.y = y;
@@ -140,7 +146,9 @@
         return dirString;
 
     };
+    //#endregion
 
+    //#region Map
     function Map(size, grid) {
         this.size = size;
         this.wallGrid = grid.walls;
@@ -203,7 +211,9 @@
         if (this.light > 0) this.light = Math.max(this.light - 10 * seconds, 0);
         else if (Math.random() * 5 < seconds) this.light = 2;
     };
+    //#endregion
 
+    //#region Camera
     function Camera(canvas, resolution, focalLength) {
         this.ctx = canvas.getContext("2d");
         this.width = canvas.width = window.innerWidth * 0.5;
@@ -282,7 +292,9 @@
             height: wallHeight
         };
     };
+    //#endregion
 
+    //#region GameLoop
     function GameLoop() {
         this.frame = this.frame.bind(this);
         this.lastTime = 0;
@@ -307,7 +319,9 @@
             requestAnimationFrame(this.frame);
         }
     };
+    //#endregion
 
+    //#region aMaze
     aMaze.init = function (grid) {
         Cookies.setItem("level", aMaze.currentGrid, Infinity);
         currentLevel.innerHTML = "Level: " + grid.id;
@@ -363,5 +377,6 @@
     aMaze.updatesMade = 0;
     aMaze.currentGrid = Cookies.hasItem("level") ? Number(Cookies.getItem("level")) : 0;
     aMaze.init(Grids[aMaze.currentGrid]);
+    //#endregion
 
 });
