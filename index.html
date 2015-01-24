@@ -5,14 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>aMaze</title>
     <link rel="stylesheet" href="amaze.min.css" />
-    <script async data-main="scripts/app.min" src="scripts/require.min.js"></script>
+    <script async data-main="scripts/app" src="scripts/require.min.js"></script>
 </head>
 <body>
-    <div id="instructions">
-        Use directional keys to navigate the world of aMaze to find freedom.
-        <br/><br/>
-        Your maze location and level are saved in your
-        browser so you can resume on your next visit.
+    <div id="instructions">        
     </div>
     <div id="game-meta">
         <div id="currentLevel"></div>
@@ -21,5 +17,17 @@
         <input id="restartGame" type="button" value="Game Restart" />
     </div>
     <canvas id="display" />
+    <script>
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date(); a = s.createElement(o),
+            m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+        ga('create', 'UA-58781613-1', 'auto');
+        ga('send', 'pageview');
+
+    </script>
 </body>
 </html>

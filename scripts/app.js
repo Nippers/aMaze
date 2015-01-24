@@ -1,24 +1,26 @@
 ﻿require(["levels.min", "cookies.min"], function (Levels, Cookies) {
 
     //#region app.js Scoped Global Variables
-    var aMaze = this,
-        CIRCLE = Math.PI * 2,
-        MOBILE = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent),
-        currentPostition = document.getElementById("position"),
-        currentLevel = document.getElementById("currentLevel"),
-        instructions = document.getElementById("instructions");
+    var aMaze = this;
+    aMaze.CIRCLE = Math.PI * 2,
+    aMaze.MOBILE = /Android|webOS|iPhone|iPad|iPod|BlackBerry/i.test(navigator.userAgent),
+    aMaze.TOUCHSCREEN = ("ontouchstart" in window),
+    aMaze.currentPostition = document.getElementById("position"),
+    aMaze.currentLevelDisplay = document.getElementById("currentLevel"),
+    aMaze.instructions = document.getElementById("instructions"),
+    aMaze.display = document.getElementById("display");
     //#endregion
 
     //#region Controls
     function Controls() {
         this.codes = { 37: "left", 39: "right", 38: "forward", 40: "backward" };
         this.states = { "left": false, "right": false, "forward": false, "backward": false };
+
         document.addEventListener("keydown", this.onKey.bind(this, true), false);
         document.addEventListener("keyup", this.onKey.bind(this, false), false);
-        document.addEventListener("touchstart", this.onTouch.bind(this), false);
-        document.addEventListener("touchmove", this.onTouch.bind(this), false);
-        document.addEventListener("touchend", this.onTouchEnd.bind(this), false);
-
+        aMaze.display.addEventListener("touchstart", this.onTouch.bind(this), false);
+        aMaze.display.addEventListener("touchmove", this.onTouch.bind(this), false);
+        aMaze.display.addEventListener("touchend", this.onTouchEnd.bind(this), false);
     }
 
     Controls.prototype.onTouch = function (e) {
@@ -62,7 +64,7 @@
     }
 
     Player.prototype.rotate = function (angle) {
-        this.direction = (this.direction + angle + CIRCLE) % (CIRCLE);
+        this.direction = (this.direction + angle + aMaze.CIRCLE) % (aMaze.CIRCLE);
     };
 
     Player.prototype.walk = function (distance, map) {
@@ -152,7 +154,7 @@
     function Map(level) {
         this.size = level.size;
         this.walllevel = level.walls;
-        this.skybox = (level.skybox ? new Bitmap(level.skybox.path, level.skybox.width, level.skybox.height) : 
+        this.skybox = (level.skybox ? new Bitmap(level.skybox.path, level.skybox.width, level.skybox.height) :
                                       new Bitmap("assets/bg.png", 2000, 750));
         this.wallTexture = (level.wallTexture ? new Bitmap(level.wallTexture.path, level.wallTexture.width, level.wallTexture.height) :
                                                new Bitmap("assets/wall_texture.jpg", 700, 516));
@@ -222,7 +224,7 @@
         this.resolution = resolution;
         this.spacing = this.width / resolution;
         this.focalLength = focalLength || 0.8;
-        this.range = MOBILE ? 8 : 28;
+        this.range = aMaze.MOBILE ? 14 : 28;
         this.lightRange = 5;
         this.scale = (this.width + this.height) / 1200;
     }
@@ -234,7 +236,7 @@
 
     Camera.prototype.drawSky = function (direction, sky, ambient) {
         var width = sky.width * (this.height / sky.height) * 2;
-        var left = (direction / CIRCLE) * -width;
+        var left = (direction / aMaze.CIRCLE) * -width;
 
         this.ctx.save();
         this.ctx.drawImage(sky.image, left, 0, width, this.height);
@@ -325,16 +327,15 @@
     //#region aMaze
     aMaze.init = function (level) {
         Cookies.setItem("level", aMaze.currentLevel, Infinity);
-        currentLevel.innerHTML = "Level: " + level.id;
+        aMaze.currentLevelDisplay.innerHTML = "Level: " + level.id;
         aMaze.mazeCompleted = false;
-        aMaze.display = document.getElementById("display");
         aMaze.player = new Player((Cookies.hasItem("x") ? Number(Cookies.getItem("x")) : level.startingPoint.x),
                                 (Cookies.hasItem("y") ? Number(Cookies.getItem("y")) : level.startingPoint.y),
                                 (Cookies.hasItem("dir") ? Number(Cookies.getItem("dir")) : level.startingDirection));
 
         aMaze.map = new Map(level);
         aMaze.controls = new Controls();
-        aMaze.camera = new Camera(aMaze.display, MOBILE ? 180 : 640, .5);
+        aMaze.camera = new Camera(aMaze.display, aMaze.MOBILE ? 320 : 640, .5);
         aMaze.loop = new GameLoop();
 
         aMaze.loop.start(function frame(seconds) {
@@ -374,6 +375,15 @@
 
     document.getElementById("restartLevel").addEventListener("click", aMaze.onRestartLevel.bind(this), false);
     document.getElementById("restartGame").addEventListener("click", aMaze.onRestartGame.bind(this), false);
+    if (!aMaze.TOUCHSCREEN) {
+        aMaze.instructions.innerHTML = "Use directional keys to navigate the world of aMaze to find freedom.";
+    }
+    else {
+        aMaze.instructions.innerHTML = "Press and hold the center of the screen to walk forward and the lower corners to rotate.";
+    }
+
+    aMaze.instructions.innerHTML += "<br /><br />Your maze location and level are saved in your browser so you can resume on your next visit.";
+
 
     aMaze.updatesMade = 0;
     aMaze.currentLevel = Cookies.hasItem("level") ? Number(Cookies.getItem("level")) : 0;
